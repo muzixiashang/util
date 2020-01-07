@@ -1,0 +1,74 @@
+package com.lkj.test;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 线程池
+ *
+ * @author kunjie.liang_w@bitmain.com
+ * @version 1.0.0
+ * @since 2020年1月7日 下午3:26:22
+ */
+public class ThreadPoolTest {
+	/**
+	 * 核心线程数 当执行数量小于核心线程时，只调度线程池里的核心线程
+	 */
+	private static final int CORE_POOL_SIZE = 20;
+	/**
+	 * 最大线程数 当执行数量大于核心线程时，会调度线程池里的最大线程
+	 */
+	private static final int MAX_POOL_ZISE = 25;
+	/**
+	 * 存活时间 执行逻辑在队列里存活时间
+	 */
+	private static final Long KEEP_ALIVE_TIME = 60L;
+	/**
+	 * 线程队列 ArrayBlockingQueue为阻塞队列，当执行数量大于队列长度是会阻塞执行，丢弃。可替代为普通队列或非阻塞队列
+	 *
+	 */
+	private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_ZISE,
+			KEEP_ALIVE_TIME, TimeUnit.SECONDS, new ArrayBlockingQueue<>(100));
+
+	// 异步执行
+	public static void toExecute() {
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// 异步执行的方法
+					try {
+						testService();
+					} catch (Exception e) {
+						System.out.println("testService Exception:" + e);
+
+					}
+				}
+			});
+		} catch (Exception e) {
+			System.out.println("ThreadPool error:" + e);
+		}
+	}
+
+	// 需要实现的逻辑
+	public static void testService() throws Exception {
+		Thread.sleep(1000);
+		System.out.println("异步方法执行时间:" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+
+	}
+
+	// 测试
+	public static void main(String[] args) {
+		for (int i = 0; i < 100; i++) {
+			long ct = System.currentTimeMillis();
+			System.out.println("第" + i + "次请求进来，时间戳：" + ct);
+			ThreadPoolTest.toExecute();
+			System.out.println("第" + i + "次请求结束，时长：" + (System.currentTimeMillis() - ct));
+
+		}
+	}
+}
